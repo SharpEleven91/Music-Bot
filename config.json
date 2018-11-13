@@ -11,6 +11,12 @@
         },
         "playlist": {
             "usage": "shows current playlist queue"
+        },
+        "pause": {
+            "usage": "pauses current song"
+        },
+        "resume" : {
+            "usage" : "resumes currently paused song"
         }
     }
 }

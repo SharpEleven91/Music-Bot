@@ -21,5 +21,9 @@ Bot.on("message", (message) => {
         Radio.Skip(message);
     } else if (command === 'playlist') {
         Radio.ShowQueue(message);
+    } else if (command === 'pause') {
+        Radio.Pause(message);
+    } else if (command === 'resume') {
+        Radio.Resume(message);
     }
 })

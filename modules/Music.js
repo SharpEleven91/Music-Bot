@@ -5,6 +5,7 @@ const YTSearch = require("youtube-search-promise");
 const API_KEY = config.api_key;
 module.exports = class Music {
   constructor() {
+    this.paused = false;
     this.ActiveMessage = false;
     this.SongList = [];
     this.NowPlaying = false; // holds stream
@@ -45,7 +46,29 @@ module.exports = class Music {
     let richMessage = new Discord.RichEmbed().setTitle("Playlist").setDescription(this.SongList);
     message.channel.send(richMessage);
   }
-
+  // pause current song
+  Pause(message) {
+    if (this.NowPlaying && !this.paused) {
+        let richMessage = new Discord.RichEmbed().setTitle("Paused");
+        this.paused = true;
+        this.NowPlaying.pause();
+        return message.channel.send(richMessage);
+    } else if (!this.NowPlaying) {
+        let richMessage = new Discord.RichEmbed().setTitle("There's nothing to pause");
+        return message.channel.send(richMessage);
+    } else if (this.NowPlaying && this.paused) {
+        let richMessage = new Discord.RichEmbed().setTitle("I'm already paused");
+        return message.channel.send(richMessage);    
+    }
+  }
+  Resume(message) {
+      if (this.NowPlaying && this.paused) {
+          this.paused = false;
+          this.NowPlaying.resume();
+          let richMessage = new Discord.RichEmbed().setTitle("Resuming");
+          return message.channel.send(richMessage); 
+      }
+  }
   CreatePlayList() {
     return null;
   }
@@ -68,13 +91,20 @@ module.exports = class Music {
       message.channel.send(richMessage);
     }
   }
+  RabbitHole(message, args) {
+      return null;
+  }
   Add(message, args) {
+    // checks if the request is valid
     if (args.length <= 0) {
       let richMessage = new Discord.RichEmbed()
         .setTitle("Try again with a link")
         .setColor(0xff0000);
       return message.channel.send(richMessage);
     }
+    // validates the request as a url for youtube
+    // if not then it searches youtube
+    // fetches the result and adds it to the playlist
     if (!YTDL.validateURL(args[0])) {
       const opts = { maxResults: 1, key: API_KEY };
       YTSearch(args.join(" "), opts)
