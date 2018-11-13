@@ -8,6 +8,9 @@
         },
         "skip" : {
             "usage": "null"
+        },
+        "playlist": {
+            "usage": "shows current playlist queue"
         }
     }
 }
