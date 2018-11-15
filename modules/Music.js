@@ -7,27 +7,22 @@ const API_KEY = config.api_key;
 module.exports = class Music {
   constructor() {
     this.paused = false; // true if paused, false if not
-    this.ActiveMessage = this.SongList = []; // an array of strings representing the playlist
+    this.ActiveMessage = [];
+    this.SongList = []; // an array of strings representing the playlist
     this.NowPlaying = false; // holds stream
     this.Queue = []; // holds current queue of songs
   }
+  // takes a voice channel connection and a message
   Play(connection, message) {
     this.NowPlaying = connection.playStream(
-      YTDL(this.Queue[0], { filter: "audioonly", quality: "highest" })
+      YTDL(this.Queue[0], { filter: "audioonly" })
     );
     YTDL.getBasicInfo(this.Queue[0], (error, response) => {
       if (error) {
         return console.log(error);
       }
       let requestDisplay = response.player_response.videoDetails.title;
-      let richMessage = new Discord.RichEmbed()
-        .setTitle("Now Playing: " + requestDisplay)
-        .setColor(0xff0000);
-      message.channel.send(richMessage).then(delete_message => {
-        delete_message.delete(
-          response.player_response.videoDetails.lengthSeconds * 1000
-        );
-      });
+      Utility.sendChannelMessageTemp(message, "Now Playing: " + requestDisplay, response.player_response.videoDetails.lengthSeconds * 1000);
     });
     this.Remove();
     this.NowPlaying.on("end", () => {
@@ -53,18 +48,18 @@ module.exports = class Music {
     if (this.NowPlaying && !this.paused) {
       this.paused = true;
       this.NowPlaying.pause();
-      Utility.sendChannelMessage(message, "Paused");
+      Utility.sendChannelMessageTemp(message, "Paused", 6000);
     } else if (!this.NowPlaying) {
-      Utility.sendChannelMessage(message, "There's nothing to pause");
+      Utility.sendChannelMessageTemp(message, "There's nothing to pause", 6000);
     } else if (this.NowPlaying && this.paused) {
-      Utility.sendChannelMessage(message, "I'm already paused");
+      Utility.sendChannelMessageTemp(message, "I'm already paused", 6000);
     }
   }
   Resume(message) {
     if (this.NowPlaying && this.paused) {
       this.paused = false;
       this.NowPlaying.resume();
-      Utility.sendChannelMessage(message, "Resuming");
+      Utility.sendChannelMessageTemp(message, "Resuming", 6000);
     }
   }
   CreatePlayList() {
