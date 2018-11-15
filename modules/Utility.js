@@ -1,12 +1,9 @@
 const Discord = require("discord.js");
 
-class Utility {
-    sendChannelMessage(message, content, description = '') {
-        let richMessage = new Discord.RichEmbed()
-            .setTitle(content)
-            .setDescriptiong(description);
-        message.channel.send(richMessage);
-    }
-}
-
-export default Utility
+module.exports.sendChannelMessage = function (message, content, description = "") {
+  console.log("z");
+  let richMessage = new Discord.RichEmbed()
+    .setTitle(content)
+    .setDescription(description);
+  message.channel.send(richMessage);
+};

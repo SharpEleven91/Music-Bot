@@ -32,6 +32,7 @@ module.exports = class Music {
     this.Remove();
     this.NowPlaying.on("end", () => {
       if (this.Queue.length >= 1) {
+        this.NowPlaying.destroy();
         this.Play(connection, message);
       } else {
         this.NowPlaying.destroy();
@@ -44,7 +45,7 @@ module.exports = class Music {
     if (this.Queue.length <= 0) {
       Utility.sendChannelMessage("Playlist is currently empty");
     } else {
-      Utility.send(message, "Playlist", this.SongList);
+      Utility.sendChannelMessage(message, "Playlist", this.SongList);
     }
   }
   // pause current song
@@ -106,11 +107,12 @@ module.exports = class Music {
           console.log(error);
         })
         .then(song => {
-          this.Queue.push(song[0].link);
           if (!message.guild.voiceConnection) {
             if (!message.member.voiceChannel) {
               Utility.sendChannelMessage(message, "You must be in a voice channel to make a request");
             } else {
+            console.log(song[0]);
+            this.Queue.push(song[0].link);
             message.member.voiceChannel
               .join()
               .then(connection => {
@@ -121,31 +123,34 @@ module.exports = class Music {
           } else {
             YTDL.getBasicInfo(song[0].link, (error, response) => {
               if (error) {
-                this.Queue.shift();
                 return message.channel.send("Song is Not Available");
               }
               let requestDisplay = response.player_response.videoDetails.title;
+              this.Queue.push(song[0].link);
               this.SongList.push(requestDisplay);
               Utility.sendChannelMessage(message, requestDisplay + " added to playlist");
             });
           }
         });
     } else {
-      this.Queue.push(args[0]);
       if (!message.guild.voiceConnection) {
         message.member.voiceChannel
           .join()
           .then(connection => {
+            this.Queue.push(args[0]);
             this.Play(connection, message);
           })
           .catch(error => console.log(error));
       } else {
         YTDL.getBasicInfo(args[0], (error, response) => {
           if (error) {
-            this.Queue.shift();
             Utility.sendChannelMessage(message, "Try a different link");
+          } else {
+            let requestDisplay = response.player_response.videoDetails.title;
+            this.Queue.push(args[0]);
+            this.SongList.push(requestDisplay);
+            Utility.sendChannelMessage(message, requestDisplay + " added to playlist");
           }
-          let richMessage = new Discord.RichEmbed().setTitle("");
         });
       }
     }
