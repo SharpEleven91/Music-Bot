@@ -1,13 +1,13 @@
 const Discord = require("discord.js");
 const config = require("../config.json");
 const YTDL = require("ytdl-core");
+const Utility = require("./Utility.js");
 const YTSearch = require("youtube-search-promise");
 const API_KEY = config.api_key;
 module.exports = class Music {
   constructor() {
-    this.paused = false;
-    this.ActiveMessage = false;
-    this.SongList = [];
+    this.paused = false; // true if paused, false if not
+    this.ActiveMessage = this.SongList = []; // an array of strings representing the playlist
     this.NowPlaying = false; // holds stream
     this.Queue = []; // holds current queue of songs
   }
@@ -23,13 +23,15 @@ module.exports = class Music {
       let richMessage = new Discord.RichEmbed()
         .setTitle("Now Playing: " + requestDisplay)
         .setColor(0xff0000);
-      message.channel.send(richMessage).then(delete_message => { delete_message.delete(response.player_response.videoDetails.lengthSeconds * 1000) });
+      message.channel.send(richMessage).then(delete_message => {
+        delete_message.delete(
+          response.player_response.videoDetails.lengthSeconds * 1000
+        );
+      });
     });
-    this.SongList.shift();
-    this.Queue.shift();
+    this.Remove();
     this.NowPlaying.on("end", () => {
       if (this.Queue.length >= 1) {
-        this.NowPlaying.destroy();
         this.Play(connection, message);
       } else {
         this.NowPlaying.destroy();
@@ -40,72 +42,61 @@ module.exports = class Music {
   // shows the current queue
   ShowQueue(message) {
     if (this.Queue.length <= 0) {
-        let richMessage = new Discord.RichEmbed().setTitle("Playlist is currently Empty");
-        return message.channel.send(richMessage);
+      Utility.sendChannelMessage("Playlist is currently empty");
+    } else {
+      Utility.send(message, "Playlist", this.SongList);
     }
-    let richMessage = new Discord.RichEmbed().setTitle("Playlist").setDescription(this.SongList);
-    message.channel.send(richMessage);
   }
   // pause current song
   Pause(message) {
     if (this.NowPlaying && !this.paused) {
-        let richMessage = new Discord.RichEmbed().setTitle("Paused");
-        this.paused = true;
-        this.NowPlaying.pause();
-        return message.channel.send(richMessage);
+      this.paused = true;
+      this.NowPlaying.pause();
+      Utility.sendChannelMessage(message, "Paused");
     } else if (!this.NowPlaying) {
-        let richMessage = new Discord.RichEmbed().setTitle("There's nothing to pause");
-        return message.channel.send(richMessage);
+      Utility.sendChannelMessage(message, "There's nothing to pause");
     } else if (this.NowPlaying && this.paused) {
-        let richMessage = new Discord.RichEmbed().setTitle("I'm already paused");
-        return message.channel.send(richMessage);    
+      Utility.sendChannelMessage(message, "I'm already paused");
     }
   }
   Resume(message) {
-      if (this.NowPlaying && this.paused) {
-          this.paused = false;
-          this.NowPlaying.resume();
-          let richMessage = new Discord.RichEmbed().setTitle("Resuming");
-          return message.channel.send(richMessage); 
-      }
+    if (this.NowPlaying && this.paused) {
+      this.paused = false;
+      this.NowPlaying.resume();
+      Utility.sendChannelMessage(message, "Resuming");
+    }
   }
   CreatePlayList() {
     return null;
   }
 
   DeletePlayList() {
-    return null 
+    return null;
   }
-
+  // skips current song
   Skip(message) {
     if (this.NowPlaying) {
-      let richMessage = new Discord.RichEmbed()
-        .setTitle("Song Skipped")
-        .setColor(0xff0000);
-      message.channel.send(richMessage);
-      this.NowPlaying.end('skipped');
+      Utility.sendChannelMessage(message, "Current Song Skipped");
+      this.NowPlaying.end();
     } else {
-      let richMessage = new Discord.RichEmbed()
-        .setTitle("Nothing to Skip")
-        .setColor(0xff0000);
-      message.channel.send(richMessage);
+      Utility.sendChannelMessage(message, "Nothing to Skip");
     }
   }
-  RabbitHole(message, args) {
-      return null;
+  Remove() {
+    this.Queue.shift();
+    this.SongList.shift();
   }
+  RabbitHole(message, args) {
+    return null;
+  }
+  // if in the voice channel already and playing a song
+  // add song to the queue
+  // else join the voice channel of requester and play song
   Add(message, args) {
     // checks if the request is valid
     if (args.length <= 0) {
-      let richMessage = new Discord.RichEmbed()
-        .setTitle("Try again with a link")
-        .setColor(0xff0000);
-      return message.channel.send(richMessage);
-    }
-    // validates the request as a url for youtube
-    // if not then it searches youtube
-    // fetches the result and adds it to the playlist
-    if (!YTDL.validateURL(args[0])) {
+      Utility.sendChannelMessage(message, "Try again with a valid link");
+    } else if (!YTDL.validateURL(args[0])) {
       const opts = { maxResults: 1, key: API_KEY };
       YTSearch(args.join(" "), opts)
         .then(results => {
@@ -118,28 +109,24 @@ module.exports = class Music {
           this.Queue.push(song[0].link);
           if (!message.guild.voiceConnection) {
             if (!message.member.voiceChannel) {
-                let richMessage = new Discord.RichEmbed()
-                .setTitle("You have to be in a voice channel to request a song")
-                .setColor(0xff0000);
-                return message.channel.send(richMessage)
-            }
+              Utility.sendChannelMessage(message, "You must be in a voice channel to make a request");
+            } else {
             message.member.voiceChannel
               .join()
               .then(connection => {
                 this.Play(connection, message);
               })
               .catch(error => console.log(error));
+            }
           } else {
             YTDL.getBasicInfo(song[0].link, (error, response) => {
               if (error) {
+                this.Queue.shift();
                 return message.channel.send("Song is Not Available");
               }
               let requestDisplay = response.player_response.videoDetails.title;
               this.SongList.push(requestDisplay);
-              let richMessage = new Discord.RichEmbed()
-                .setTitle(requestDisplay + " added to playlist")
-                .setColor(0xff0000);
-              message.channel.send(richMessage);
+              Utility.sendChannelMessage(message, requestDisplay + " added to playlist");
             });
           }
         });
@@ -152,6 +139,14 @@ module.exports = class Music {
             this.Play(connection, message);
           })
           .catch(error => console.log(error));
+      } else {
+        YTDL.getBasicInfo(args[0], (error, response) => {
+          if (error) {
+            this.Queue.shift();
+            Utility.sendChannelMessage(message, "Try a different link");
+          }
+          let richMessage = new Discord.RichEmbed().setTitle("");
+        });
       }
     }
   }
