@@ -24,8 +24,11 @@ module.exports = class Music {
       currentSong.length * 1000
     );
     if (this.discovery) {
-      let randomSong = currentSong.reccommended[Math.floor(Math.random() * currentSong.reccommended.length)];
-      console.log(randomSong)
+      let randomSong =
+        currentSong.reccommended[
+          Math.floor(Math.random() * currentSong.reccommended.length)
+        ];
+      console.log(randomSong);
       this.Add(message, [randomSong]);
     }
     this.Remove();
@@ -81,16 +84,22 @@ module.exports = class Music {
   Discover(message, args) {
     if (this.discovery) {
       console.log(args);
-      if (args[0].toLowerCase() === 'stop') {
+      if (args[0].toLowerCase() === "stop") {
         this.discovery = false;
         this.Queue = [];
         this.NowPlaying.end();
       } else {
-        Utility.sendChannelMessage(message, "A discovery has already been started");
+        Utility.sendChannelMessage(
+          message,
+          "A discovery has already been started"
+        );
       }
     } else {
       this.discovery = true;
-      Utility.sendChannelMessage(message, "A discovery playlist has been started");
+      Utility.sendChannelMessage(
+        message,
+        "A discovery playlist has been started"
+      );
       this.Add(message, args);
     }
   }
@@ -153,7 +162,7 @@ module.exports = class Music {
       })
       .catch(error => {
         console.log(error);
-        Utility.sendChannelMessage(message, "Sorry, No Songs were found")
+        Utility.sendChannelMessage(message, "Sorry, No Songs were found");
       });
   }
 };

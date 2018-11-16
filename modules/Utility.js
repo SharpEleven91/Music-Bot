@@ -1,9 +1,9 @@
 const Discord = require("discord.js");
 const config = require("../config.json");
-const API_KEY = config.api_key
+const API_KEY = config.api_key;
 const YTSearch = require("youtube-search-promise");
 const YTDL = require("ytdl-core");
-const {promisify} = require('util');
+const { promisify } = require("util");
 
 module.exports.sendChannelMessage = function(
   message,
@@ -45,13 +45,15 @@ module.exports.findLink = function(input) {
 };
 
 module.exports.getSongInfo = function(link) {
-    const getBasicInfo = promisify(YTDL.getBasicInfo);
-    return getBasicInfo(link)
-    .then(response => {
-      return { title: response.player_response.videoDetails.title,
-              length: response.player_response.videoDetails.lengthSeconds,
-              link: link,
-              reccommended: response.related_videos.map(video => "http://www.youtube.com/watch?v=" + video.id)}
-      });
-
-}
+  const getBasicInfo = promisify(YTDL.getBasicInfo);
+  return getBasicInfo(link).then(response => {
+    return {
+      title: response.player_response.videoDetails.title,
+      length: response.player_response.videoDetails.lengthSeconds,
+      link: link,
+      reccommended: response.related_videos.map(
+        video => "http://www.youtube.com/watch?v=" + video.id
+      )
+    };
+  });
+};
