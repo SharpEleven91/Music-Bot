@@ -1,39 +1,39 @@
-const Discord = require("discord.js");
+const discord = require("discord.js");
 const config = require("./config.json");
 const Music = require("./modules/Music.js");
-const commands = config.commands;
-const Bot = new Discord.Client();
-const PREFIX = config.prefix;
-const Radio = new Music();
-
-Bot.login(config.token);
-Bot.on("message", message => {
-  if (!message.content.startsWith(PREFIX)) {
+const log = require("./modules/Logger.js"); // logging module
+const commands = config.commands;        // object containing valid commands
+const bot = new Discord.Client();        // discord client instance
+const PREFIX = config.prefix;            // holds tokens, prefix, commands and their usage
+const radio = new Music();               // Music module instance
+bot.login(config.token);                 // logs bot in using token from json
+bot.on("message", message => {
+  log(message);                          // logs every message sent in discord ** EXCLUDING Bot messages
+  if (!message.content.startsWith(PREFIX)) {     // ignores every message that doesn't begin with the specified prefix
     return;
   }
-  console.log(message.member.nickname + ": " + message.content);
-  let command = message.content
+  let command = message.content               // processes command
     .slice(1, message.length)
     .split(" ")[0]
     .toLowerCase();
-  if (!commands[command]) {
+  if (!commands[command]) {                  // checks if the command is valid
     let richMessage = new Discord.RichEmbed()
       .setTitle("Invalid Command: Type -help to see a list of commands")
       .setColor(0xff0000);
     return message.channel.send(richMessage);
   }
-  let args = message.content.split(" ").slice(1, message.content.length);
+  let args = message.content.split(" ").slice(1, message.content.length); // processes the arguments given 
   if (command === "play" && args.length > 0) {
-    Radio.Add(message, args);
+    radio.add(message, args);
   } else if (command === "skip") {
-    Radio.Skip(message);
+    radio.skip(message);
   } else if (command === "playlist") {
-    Radio.ShowQueue(message);
+    radio.showQueue(message);
   } else if (command === "pause" || command === "stop") {
-    Radio.Pause(message);
-  } else if (command === "resume" || command === "play" && args.length <= 0) {
-    Radio.Resume(message);
+    radio.pause(message);
+  } else if (command === "resume" || (command === "play" && args.length <= 0)) {
+    radio.resume(message);
   } else if (command === "discover") {
-    Radio.Discover(message, args);
+    radio.discover(message, args);
   }
 });
