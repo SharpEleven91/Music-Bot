@@ -59,7 +59,11 @@ module.exports = class Music {
       this.nowPlaying.pause();
       utility.sendChannelMessageTemp(message, "Track has been paused", 6000);
     } else if (!this.nowPlaying) {
-      utility.sendChannelMessageTemp(message, "No Tracks are current Playing", 6000);
+      utility.sendChannelMessageTemp(
+        message,
+        "No Tracks are current Playing",
+        6000
+      );
     } else if (this.nowPlaying && this.paused) {
       utility.sendChannelMessageTemp(message, "Track is already paused", 6000);
     }
@@ -126,7 +130,8 @@ module.exports = class Music {
     if (args.length <= 0) {
       return utility.sendChannelMessage(message, "Try again with a valid link");
     }
-    utility.findLink(args)
+    utility
+      .findLink(args)
       .then(link => {
         return utility.getSongInfo(link);
       })
