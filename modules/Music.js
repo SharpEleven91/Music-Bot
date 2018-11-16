@@ -1,24 +1,23 @@
 const Discord = require("discord.js");
 const config = require("../config.json");
 const YTDL = require("ytdl-core");
-const Utility = require("./Utility.js");
+const utility = require("./utility.js");
 const YTSearch = require("youtube-search-promise");
 const API_KEY = config.api_key;
 module.exports = class Music {
   constructor() {
     this.discovery = false;
     this.paused = false; // true if paused, false if not
-    this.ActiveMessage = [];
-    this.NowPlaying = false; // holds stream else false
-    this.Queue = []; // holds an array of objects with fields {length: Int, title: String, link: String}
+    this.nowPlaying = false; // holds stream else false
+    this.queue = []; // holds an array of objects with fields {length: Int, title: String, link: String}
   }
   // take a voice channel connection and a message and playing request over stream
-  Play(connection, message) {
-    let currentSong = this.Queue[0];
-    this.NowPlaying = connection.playStream(
+  play(connection, message) {
+    let currentSong = this.queue[0];
+    this.nowPlaying = connection.playStream(
       YTDL(currentSong.link, { filter: "audioonly" })
     );
-    Utility.sendChannelMessageTemp(
+    utility.sendChannelMessageTemp(
       message,
       "Now Playing: " + currentSong.title,
       currentSong.length * 1000
@@ -28,128 +27,128 @@ module.exports = class Music {
         currentSong.reccommended[
           Math.floor(Math.random() * currentSong.reccommended.length)
         ];
-      this.Add(message, [randomSong]);
+      this.add(message, [randomSong]);
     }
-    this.Remove();
-    this.NowPlaying.on("end", () => {
-      if (this.Queue.length >= 1) {
-        this.NowPlaying.destroy();
-        this.Play(connection, message);
+    this.remove();
+    this.nowPlaying.on("end", () => {
+      if (this.queue.length >= 1) {
+        this.nowPlaying.destroy();
+        this.play(connection, message);
       } else {
         connection.disconnect();
-        this.NowPlaying.destroy();
+        this.nowPlaying.destroy();
       }
     });
   }
   // show the current queue
-  ShowQueue(message) {
-    if (this.Queue.length <= 0) {
-      Utility.sendChannelMessage("Playlist is currently empty");
+  showQueue(message) {
+    if (this.queue.length <= 0) {
+      utility.sendChannelMessage("Playlist is currently empty");
     } else {
-      Utility.sendChannelMessage(
+      utility.sendChannelMessage(
         message,
         "Playlist",
-        this.Queue.map(song => song.title)
+        this.queue.map(song => song.title)
       );
     }
   }
   // pause current song
-  Pause(message) {
-    if (this.NowPlaying && !this.paused) {
+  pause(message) {
+    if (this.nowPlaying && !this.paused) {
       this.paused = true;
-      this.NowPlaying.pause();
-      Utility.sendChannelMessageTemp(message, "Track has been paused", 6000);
-    } else if (!this.NowPlaying) {
-      Utility.sendChannelMessageTemp(message, "No Tracks are current Playing", 6000);
-    } else if (this.NowPlaying && this.paused) {
-      Utility.sendChannelMessageTemp(message, "Track is already paused", 6000);
+      this.nowPlaying.pause();
+      utility.sendChannelMessageTemp(message, "Track has been paused", 6000);
+    } else if (!this.nowPlaying) {
+      utility.sendChannelMessageTemp(message, "No Tracks are current Playing", 6000);
+    } else if (this.nowPlaying && this.paused) {
+      utility.sendChannelMessageTemp(message, "Track is already paused", 6000);
     }
   }
   // resume the current stream if paused
-  Resume(message) {
-    if (this.NowPlaying && this.paused) {
+  resume(message) {
+    if (this.nowPlaying && this.paused) {
       this.paused = false;
-      this.NowPlaying.resume();
-      Utility.sendChannelMessageTemp(message, "Resuming", 6000);
+      this.nowPlaying.resume();
+      utility.sendChannelMessageTemp(message, "Resuming", 6000);
     }
   }
-  CreatePlayList() {
+  createPlayList() {
     return null;
   }
   // Create an infinite playlist based on the request
-  Discover(message, args) {
+  discover(message, args) {
     if (this.discovery) {
       if (args[0].toLowerCase() === "stop") {
         this.discovery = false;
-        this.Queue = [];
-        this.NowPlaying.end();
+        this.queue = [];
+        this.nowPlaying.end();
         return null;
       } else {
-        Utility.sendChannelMessage(
+        utility.sendChannelMessage(
           message,
           "A Discovery playlist has already been started"
         );
       }
     } else {
       this.discovery = true;
-      Utility.sendChannelMessage(
+      utility.sendChannelMessage(
         message,
         "A Discovery playlist has been started"
       );
-      this.Add(message, args);
+      this.add(message, args);
     }
   }
-  DeletePlayList() {
+  deletePlayList() {
     return null;
   }
   // skip current song
-  Skip(message) {
-    if (this.NowPlaying) {
-      Utility.sendChannelMessage(message, "Current Song Skipped");
-      this.NowPlaying.end();
+  skip(message) {
+    if (this.nowPlaying) {
+      utility.sendChannelMessage(message, "Current Song Skipped");
+      this.nowPlaying.end();
     } else {
-      Utility.sendChannelMessage(message, "Nothing to Skip");
+      utility.sendChannelMessage(message, "Nothing to Skip");
     }
   }
   // remove a song from the beginning of the queue
-  Remove() {
-    this.Queue.shift();
+  remove() {
+    this.queue.shift();
   }
   // add a song to the end of the queue
-  AddToQueue(song) {
-    this.Queue.push(song);
+  addToQueue(song) {
+    this.queue.push(song);
   }
   // if in the voice channel already and playing a song
   // add song to the queue
   // else join the voice channel of requester and play song
-  Add(message, args) {
+  add(message, args) {
     // checks if the request is valid
     if (args.length <= 0) {
-      return Utility.sendChannelMessage(message, "Try again with a valid link");
+      return utility.sendChannelMessage(message, "Try again with a valid link");
     }
-    Utility.findLink(args)
+    utility.findLink(args)
       .then(link => {
-        return Utility.getSongInfo(link);
+        return utility.getSongInfo(link);
       })
       .then(song => {
         if (!message.guild.voiceConnection) {
           if (!message.member.voiceChannel) {
-            Utility.sendChannelMessage(
+            utility.sendChannelMessage(
               message,
               "You must be in a voice channel to make a request"
             );
           } else {
-            this.AddToQueue(song);
+            this.addToQueue(song);
             message.member.voiceChannel
               .join()
               .then(connection => {
-                this.Play(connection, message);
+                this.play(connection, message);
               })
               .catch(error => console.log(error));
           }
         } else {
-          this.AddToQueue(song);
-          Utility.sendChannelMessage(
+          this.addToQueue(song);
+          utility.sendChannelMessage(
             message,
             song.title + " added to playlist"
           );
@@ -157,7 +156,7 @@ module.exports = class Music {
       })
       .catch(error => {
         console.log(error);
-        Utility.sendChannelMessage(message, "Sorry, No Songs were found");
+        utility.sendChannelMessage(message, "Sorry, No Songs were found");
       });
   }
 };
