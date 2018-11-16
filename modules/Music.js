@@ -28,7 +28,6 @@ module.exports = class Music {
         currentSong.reccommended[
           Math.floor(Math.random() * currentSong.reccommended.length)
         ];
-      console.log(randomSong);
       this.Add(message, [randomSong]);
     }
     this.Remove();
@@ -59,11 +58,11 @@ module.exports = class Music {
     if (this.NowPlaying && !this.paused) {
       this.paused = true;
       this.NowPlaying.pause();
-      Utility.sendChannelMessageTemp(message, "Paused", 6000);
+      Utility.sendChannelMessageTemp(message, "Track has been paused", 6000);
     } else if (!this.NowPlaying) {
-      Utility.sendChannelMessageTemp(message, "There's nothing to pause", 6000);
+      Utility.sendChannelMessageTemp(message, "No Tracks are current Playing", 6000);
     } else if (this.NowPlaying && this.paused) {
-      Utility.sendChannelMessageTemp(message, "I'm already paused", 6000);
+      Utility.sendChannelMessageTemp(message, "Track is already paused", 6000);
     }
   }
   // resume the current stream if paused
@@ -77,9 +76,6 @@ module.exports = class Music {
   CreatePlayList() {
     return null;
   }
-  Stop(message) {
-    this.NowPlaying.destroy();
-  }
   // Create an infinite playlist based on the request
   Discover(message, args) {
     if (this.discovery) {
@@ -88,17 +84,18 @@ module.exports = class Music {
         this.discovery = false;
         this.Queue = [];
         this.NowPlaying.end();
+        return null;
       } else {
         Utility.sendChannelMessage(
           message,
-          "A discovery has already been started"
+          "A Discovery playlist has already been started"
         );
       }
     } else {
       this.discovery = true;
       Utility.sendChannelMessage(
         message,
-        "A discovery playlist has been started"
+        "A Discovery playlist has been started"
       );
       this.Add(message, args);
     }

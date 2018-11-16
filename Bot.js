@@ -11,6 +11,7 @@ Bot.on("message", message => {
   if (!message.content.startsWith(PREFIX)) {
     return;
   }
+  console.log(message.member.nickname + ": " + message.content);
   let command = message.content
     .slice(1, message.length)
     .split(" ")[0]
@@ -22,15 +23,15 @@ Bot.on("message", message => {
     return message.channel.send(richMessage);
   }
   let args = message.content.split(" ").slice(1, message.content.length);
-  if (command === "play") {
+  if (command === "play" && args.length > 0) {
     Radio.Add(message, args);
   } else if (command === "skip") {
     Radio.Skip(message);
   } else if (command === "playlist") {
     Radio.ShowQueue(message);
-  } else if (command === "pause") {
+  } else if (command === "pause" || command === "stop") {
     Radio.Pause(message);
-  } else if (command === "resume") {
+  } else if (command === "resume" || command === "play" && args.length <= 0) {
     Radio.Resume(message);
   } else if (command === "discover") {
     Radio.Discover(message, args);
