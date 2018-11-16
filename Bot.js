@@ -25,5 +25,7 @@ Bot.on("message", (message) => {
         Radio.Pause(message);
     } else if (command === 'resume') {
         Radio.Resume(message);
+    } else if (command === 'discover') {
+         Radio.Discover(message, args);
     }
 })

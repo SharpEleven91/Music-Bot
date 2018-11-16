@@ -30,9 +30,12 @@ module.exports.sendChannelMessageTemp = function(
   });
 };
 
-module.exports.findLink = function(terms) {
+module.exports.findLink = function(input) {
+  if (YTDL.validateURL(input[0])) {
+    return new Promise((resolve, reject) => resolve(input[0]));
+  }
   const opts = { maxResults: 1, key: API_KEY };
-  return YTSearch(terms.join(" "), opts)
+  return YTSearch(input.join(" "), opts)
     .then(song => {
       return song[0].link;
     })
@@ -47,7 +50,8 @@ module.exports.getSongInfo = function(link) {
     .then(response => {
       return { title: response.player_response.videoDetails.title,
               length: response.player_response.videoDetails.lengthSeconds,
-              link: link }
+              link: link,
+              reccommended: response.related_videos.map(video => "http://www.youtube.com/watch?v=" + video.id)}
       });
 
 }
