@@ -14,24 +14,18 @@ module.exports = class Music {
   }
   // takes a voice channel connection and a message
   Play(connection, message) {
+    let currentSong = Utility.getSongInfo(this.Queue[0]);
     this.NowPlaying = connection.playStream(
       YTDL(this.Queue[0], { filter: "audioonly" })
     );
-    YTDL.getBasicInfo(this.Queue[0], (error, response) => {
-      if (error) {
-        return console.log(error);
-      }
-      let requestDisplay = response.player_response.videoDetails.title;
-      Utility.sendChannelMessageTemp(message, "Now Playing: " + requestDisplay, response.player_response.videoDetails.lengthSeconds * 1000);
-    });
+    Utility.sendChannelMessageTemp(message, "Now Playing: " + currentSongInfo.title, currentSongInfo.length * 1000);
     this.Remove();
     this.NowPlaying.on("end", () => {
       if (this.Queue.length >= 1) {
-        this.NowPlaying.destroy();
         this.Play(connection, message);
       } else {
-        this.NowPlaying.destroy();
         connection.disconnect();
+        this.NowPlaying.destroy();
       }
     });
   }
@@ -87,6 +81,10 @@ module.exports = class Music {
   RabbitHole(message, args) {
     return null;
   }
+  AddToQueue(song) {
+    this.Queue.push(song.link);
+    this.songList.push(song.title);
+  }
   // if in the voice channel already and playing a song
   // add song to the queue
   // else join the voice channel of requester and play song
@@ -95,40 +93,28 @@ module.exports = class Music {
     if (args.length <= 0) {
       Utility.sendChannelMessage(message, "Try again with a valid link");
     } else if (!YTDL.validateURL(args[0])) {
-      const opts = { maxResults: 1, key: API_KEY };
-      YTSearch(args.join(" "), opts)
-        .then(results => {
-          console.log(results);
-          return results;
-        })
-        .catch(error => {
-          console.log(error);
-        })
-        .then(song => {
-          if (!message.guild.voiceConnection) {
-            if (!message.member.voiceChannel) {
-              Utility.sendChannelMessage(message, "You must be in a voice channel to make a request");
-            } else {
-            this.Queue.push(song[0].link);
-            message.member.voiceChannel
-              .join()
-              .then(connection => {
-                this.Play(connection, message);
-              })
-              .catch(error => console.log(error));
-            }
-          } else {
-            YTDL.getBasicInfo(song[0].link, (error, response) => {
-              if (error) {
-                return message.channel.send("Song is Not Available");
-              }
-              let requestDisplay = response.player_response.videoDetails.title;
-              this.Queue.push(song[0].link);
-              this.SongList.push(requestDisplay);
-              Utility.sendChannelMessage(message, requestDisplay + " added to playlist");
-            });
-          }
-        });
+      let searched = Utility.findLink(args.join(" "));
+      if (!search) {
+        return Utility.sendChannelMessage(message, "No Songs Were Found");
+      }
+      if (!message.guild.voiceConnection) {
+        if (!message.member.voiceChannel) {
+          Utility.sendChannelMessage(message, "You must be in a voice channel to make a request");
+        } else {
+          this.Queue.push(searched);
+          message.member.voiceChannel
+            .join()
+            .then(connection => {
+              this.Play(connection, message);
+            })
+            .catch(error => console.log(error));
+        }
+      } else {
+        let song = await Utility.getSongInfo(searched);
+        this.Queue.push(song.link);
+        this.SongList.push(song.title);
+        Utility.sendChannelMessage(message, song.title + " added to playlist");
+      }
     } else {
       if (!message.guild.voiceConnection) {
         message.member.voiceChannel
@@ -143,7 +129,7 @@ module.exports = class Music {
           if (error) {
             Utility.sendChannelMessage(message, "Try a different link");
           } else {
-            let requestDisplay = response.player_response.videoDetails.title;
+            const requestDisplay = response.player_response.videoDetails.title;
             this.Queue.push(args[0]);
             this.SongList.push(requestDisplay);
             Utility.sendChannelMessage(message, requestDisplay + " added to playlist");
