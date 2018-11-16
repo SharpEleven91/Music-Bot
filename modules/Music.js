@@ -8,15 +8,14 @@ module.exports = class Music {
   constructor() {
     this.paused = false; // true if paused, false if not
     this.ActiveMessage = [];
-    this.SongList = []; // an array of strings representing the playlist
     this.NowPlaying = false; // holds stream
-    this.Queue = []; // holds current queue of songs
+    this.Queue = []; // holds an array of objects with fields {length: Int, title: String, link: String}
   }
   // takes a voice channel connection and a message
   Play(connection, message) {
     let currentSong = Utility.getSongInfo(this.Queue[0]);
     this.NowPlaying = connection.playStream(
-      YTDL(this.Queue[0], { filter: "audioonly" })
+      YTDL(currentSong.link, { filter: "audioonly" })
     );
     Utility.sendChannelMessageTemp(message, "Now Playing: " + currentSongInfo.title, currentSongInfo.length * 1000);
     this.Remove();
@@ -76,14 +75,12 @@ module.exports = class Music {
   }
   Remove() {
     this.Queue.shift();
-    this.SongList.shift();
   }
   RabbitHole(message, args) {
     return null;
   }
   AddToQueue(song) {
-    this.Queue.push(song.link);
-    this.songList.push(song.title);
+    this.Queue.push(song);
   }
   // if in the voice channel already and playing a song
   // add song to the queue
@@ -91,51 +88,31 @@ module.exports = class Music {
   Add(message, args) {
     // checks if the request is valid
     if (args.length <= 0) {
-      Utility.sendChannelMessage(message, "Try again with a valid link");
+      return Utility.sendChannelMessage(message, "Try again with a valid link");
     } else if (!YTDL.validateURL(args[0])) {
-      let searched = Utility.findLink(args.join(" "));
-      if (!search) {
-        return Utility.sendChannelMessage(message, "No Songs Were Found");
-      }
-      if (!message.guild.voiceConnection) {
-        if (!message.member.voiceChannel) {
-          Utility.sendChannelMessage(message, "You must be in a voice channel to make a request");
-        } else {
-          this.Queue.push(searched);
+      Utility.findLink(args)
+        .then(link => {
+          return Utility.getSongInfo(link)
+        })
+        .then(song => {
+          if (!message.guild.voiceConnection) {
+            if (!message.member.voiceChannel) {
+              Utility.sendChannelMessage(message, "You must be in a voice channel to make a request");
+          } else {
+          this.AddToQueue(song);
           message.member.voiceChannel
             .join()
             .then(connection => {
               this.Play(connection, message);
             })
             .catch(error => console.log(error));
-        }
-      } else {
-        let song = await Utility.getSongInfo(searched);
-        this.Queue.push(song.link);
-        this.SongList.push(song.title);
-        Utility.sendChannelMessage(message, song.title + " added to playlist");
-      }
-    } else {
-      if (!message.guild.voiceConnection) {
-        message.member.voiceChannel
-          .join()
-          .then(connection => {
-            this.Queue.push(args[0]);
-            this.Play(connection, message);
-          })
-          .catch(error => console.log(error));
-      } else {
-        YTDL.getBasicInfo(args[0], (error, response) => {
-          if (error) {
-            Utility.sendChannelMessage(message, "Try a different link");
-          } else {
-            const requestDisplay = response.player_response.videoDetails.title;
-            this.Queue.push(args[0]);
-            this.SongList.push(requestDisplay);
-            Utility.sendChannelMessage(message, requestDisplay + " added to playlist");
           }
-        });
+        } else {
+          this.AddToQueue(song);
+          Utility.sendChannelMessage(message, song.title + " added to playlist");
       }
+    }).catch(error => console.log(error));
+  
     }
   }
 };
