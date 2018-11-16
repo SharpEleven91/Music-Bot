@@ -12,7 +12,7 @@ module.exports = class Music {
     this.NowPlaying = false; // holds stream else false
     this.Queue = []; // holds an array of objects with fields {length: Int, title: String, link: String}
   }
-  // takes a voice channel connection and a message
+  // take a voice channel connection and a message and playing request over stream
   Play(connection, message) {
     let currentSong = this.Queue[0];
     this.NowPlaying = connection.playStream(
@@ -39,7 +39,7 @@ module.exports = class Music {
       }
     });
   }
-  // shows the current queue
+  // show the current queue
   ShowQueue(message) {
     if (this.Queue.length <= 0) {
       Utility.sendChannelMessage("Playlist is currently empty");
@@ -63,6 +63,7 @@ module.exports = class Music {
       Utility.sendChannelMessageTemp(message, "I'm already paused", 6000);
     }
   }
+  // resume the current stream if paused
   Resume(message) {
     if (this.NowPlaying && this.paused) {
       this.paused = false;
@@ -76,6 +77,7 @@ module.exports = class Music {
   Stop(message) {
     this.NowPlaying.destroy();
   }
+  // Create an infinite playlist based on the request
   Discover(message, args) {
     if (this.discovery) {
       console.log(args);
@@ -95,7 +97,7 @@ module.exports = class Music {
   DeletePlayList() {
     return null;
   }
-  // skips current song
+  // skip current song
   Skip(message) {
     if (this.NowPlaying) {
       Utility.sendChannelMessage(message, "Current Song Skipped");
@@ -104,16 +106,14 @@ module.exports = class Music {
       Utility.sendChannelMessage(message, "Nothing to Skip");
     }
   }
+  // remove a song from the beginning of the queue
   Remove() {
     this.Queue.shift();
   }
-  RabbitHole(message, args) {
-    
-  }
+  // add a song to the end of the queue
   AddToQueue(song) {
     this.Queue.push(song);
   }
-  createConnection(message) {}
   // if in the voice channel already and playing a song
   // add song to the queue
   // else join the voice channel of requester and play song
