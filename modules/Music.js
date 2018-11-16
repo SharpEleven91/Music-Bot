@@ -79,7 +79,6 @@ module.exports = class Music {
   // Create an infinite playlist based on the request
   Discover(message, args) {
     if (this.discovery) {
-      console.log(args);
       if (args[0].toLowerCase() === "stop") {
         this.discovery = false;
         this.Queue = [];
@@ -133,7 +132,6 @@ module.exports = class Music {
         return Utility.getSongInfo(link);
       })
       .then(song => {
-        console.log(song);
         if (!message.guild.voiceConnection) {
           if (!message.member.voiceChannel) {
             Utility.sendChannelMessage(
