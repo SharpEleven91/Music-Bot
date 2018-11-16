@@ -65,7 +65,9 @@ module.exports = class Music {
   CreatePlayList() {
     return null;
   }
-
+  RabbitHole(args) {
+    // infinite playlist built off reccomendations from initial argument
+  }
   DeletePlayList() {
     return null;
   }
@@ -96,6 +98,7 @@ module.exports = class Music {
       const opts = { maxResults: 1, key: API_KEY };
       YTSearch(args.join(" "), opts)
         .then(results => {
+          console.log(results);
           return results;
         })
         .catch(error => {
@@ -106,7 +109,6 @@ module.exports = class Music {
             if (!message.member.voiceChannel) {
               Utility.sendChannelMessage(message, "You must be in a voice channel to make a request");
             } else {
-            console.log(song[0]);
             this.Queue.push(song[0].link);
             message.member.voiceChannel
               .join()

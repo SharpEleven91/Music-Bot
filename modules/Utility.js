@@ -7,7 +7,7 @@ module.exports.sendChannelMessage = function (message, content, description = ""
   message.channel.send(richMessage);
 };
 
-module.exports.sendChannelMessageTemp = function(message, content, timeLimit, description = "") {
+module.exports.sendChannelMessageTemp = function (message, content, timeLimit, description = "") {
     let richMessage = new Discord.RichEmbed()
       .setTitle(content)
       .setDescription(description);
