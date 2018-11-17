@@ -30,20 +30,23 @@ module.exports = class Music {
       this.add(message, [randomSong]);
     }
     this.remove();
+    this.nowPlaying.on("error", () => {
+      console.log(error);
+    });
     this.nowPlaying.on("end", () => {
       if (this.queue.length >= 1) {
-        this.nowPlaying.destroy();
+        this.nowPlaying.destroy(error => console.log(error));
         this.play(connection, message);
       } else {
         connection.disconnect();
-        this.nowPlaying.destroy();
+        this.nowPlaying.destroy(error => console.log(error));
       }
     });
   }
   // show the current queue
   showQueue(message) {
     if (this.queue.length <= 0) {
-      utility.sendChannelMessage("Playlist is currently empty");
+      utility.sendChannelMessage(message, "Playlist is currently empty");
     } else {
       utility.sendChannelMessage(
         message,
@@ -76,11 +79,20 @@ module.exports = class Music {
       utility.sendChannelMessageTemp(message, "Resuming", 6000);
     }
   }
+  reset() {
+    this.nowPlaying.destroy();
+    this.queue = [];
+    this.discover = false;
+    this.pause = false;
+  }
   createPlayList() {
     return null;
   }
   // Create an infinite playlist based on the request
   discover(message, args) {
+    if (args.length <= 0) {
+      return utility.sendChannelMessageTemp(message, "Please give terms to search or a video link");
+    }
     if (this.discovery) {
       if (args[0].toLowerCase() === "stop") {
         this.discovery = false;
@@ -102,8 +114,13 @@ module.exports = class Music {
       this.add(message, args);
     }
   }
-  deletePlayList() {
-    return null;
+  clearPlaylist(message) {
+    if (this.queue.length <= 0) {
+      utility.sendChannelMessageTemp(message, "The queue is already empty", 6000);
+    } else {
+      this.queue = [];
+      utility.sendChannelMessageTemp(message, "The queue has been cleared", 6000);
+    }
   }
   // skip current song
   skip(message) {

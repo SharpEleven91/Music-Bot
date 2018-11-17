@@ -5,7 +5,7 @@ const log = require("./modules/Logger.js"); // logging module
 const commands = config.commands; // object containing valid commands
 const bot = new Discord.Client(); // discord client instance
 const PREFIX = config.prefix; // holds tokens, prefix, commands and their usage
-const radio = new Music(); // Music module instance
+let radio = new Music(); // Music module instance
 bot.login(config.token); // logs bot in using token from json
 bot.on("message", message => {
   log(message); // logs every message sent in discord ** EXCLUDING Bot messages
@@ -37,5 +37,10 @@ bot.on("message", message => {
     radio.resume(message);
   } else if (command === "discover") {
     radio.discover(message, args);
+  } else if (command === "reset") {
+    radio.reset();
+    radio = new Music();
+  } else if (command === "clear") {
+    radio.clearPlaylist(message);
   }
 });
