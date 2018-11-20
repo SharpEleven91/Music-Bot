@@ -29,7 +29,9 @@ module.exports = class Music {
         ];
       this.add(message, [randomSong]);
     }
-    this.remove();
+    if (!this.loop) {
+      this.remove();
+    }
     this.nowPlaying.on("error", () => {
       console.log(error);
     });
