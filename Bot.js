@@ -7,6 +7,7 @@ const bot = new Discord.Client(); // discord client instance
 const PREFIX = config.prefix; // holds tokens, prefix, commands and their usage
 let radio = new Music(); // Music module instance
 bot.login(config.token); // logs bot in using token from json
+bot.on("error", error => console.log(error));
 bot.on("message", message => {
   log(message); // logs every message sent in discord ** EXCLUDING Bot messages
   if (!message.content.startsWith(PREFIX)) {

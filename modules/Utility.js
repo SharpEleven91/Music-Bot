@@ -31,9 +31,9 @@ module.exports.sendChannelMessageTemp = function(
 };
 
 module.exports.findLink = function(input) {
-  if (YTDL.validateURL(input[0])) {
-    return new Promise((resolve, reject) => resolve(input[0]));
-  }
+  //if (YTDL.validateURL(input[0])) {
+    //return new Promise((resolve, reject) => resolve(input[0]));
+  //}
   const opts = { maxResults: 1, key: API_KEY };
   return YTSearch(input.join(" "), opts)
     .then(song => {
@@ -45,6 +45,7 @@ module.exports.findLink = function(input) {
 };
 
 module.exports.getSongInfo = function(link) {
+  console.log(link);
   const getBasicInfo = promisify(YTDL.getBasicInfo);
   return getBasicInfo(link).then(response => {
     return {
