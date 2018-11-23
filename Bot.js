@@ -5,7 +5,7 @@ const log = require("./modules/Logger.js"); // logging module
 const commands = config.commands; // object containing valid commands
 const bot = new Discord.Client(); // discord client instance
 const PREFIX = config.prefix; // holds tokens, prefix, commands and their usage
-let radio = new Music(); // Music module instance
+const radio = new Music(); // Music module instance
 bot.login(config.token); // logs bot in using token from json
 bot.on("error", error => console.log(error));
 bot.on("message", message => {
@@ -40,8 +40,9 @@ bot.on("message", message => {
     radio.discover(message, args);
   } else if (command === "reset") {
     radio.reset();
-    radio = new Music();
   } else if (command === "clear") {
     radio.clearPlaylist(message);
+  } else if (command === "loop") {
+    radio.loop(message);
   }
 });

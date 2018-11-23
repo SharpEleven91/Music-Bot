@@ -6,6 +6,7 @@ const YTSearch = require("youtube-search-promise");
 const API_KEY = config.api_key;
 module.exports = class Music {
   constructor() {
+    this.looping = false;
     this.discovery = false;
     this.paused = false; // true if paused, false if not
     this.nowPlaying = false; // holds stream else false
@@ -29,7 +30,7 @@ module.exports = class Music {
         ];
       this.add(message, [randomSong]);
     }
-    if (!this.loop) {
+    if (!this.looping) {
       this.remove();
     }
     this.nowPlaying.on("error", () => {
@@ -44,6 +45,18 @@ module.exports = class Music {
         this.nowPlaying.destroy(error => console.log(error));
       }
     });
+  }
+  // sets loop true
+  loop(message) {
+    if (this.looping && this.nowPlaying) {
+      this.looping = false;
+      utility.sendChannelMessage(message, "No longer looping");
+    } else if (!this.looping && this.nowPlaying) {
+      this.looping = true;
+      utility.sendChannelMessage(message, "Current song is now on loop");
+    } else {
+      utility.sendChannelMessage(message, "Nothing to loop");
+    }
   }
   // show the current queue
   showQueue(message) {
