@@ -51,7 +51,7 @@ module.exports = class Music {
     if (this.looping && this.nowPlaying) {
       this.looping = false;
       utility.sendChannelMessage(message, "No longer looping");
-    } else if (!this.looping && this.nowPlaying) {
+    } else if (!this.looping && !this.nowPlaying) {
       this.looping = true;
       utility.sendChannelMessage(message, "Current song is now on loop");
     } else {
@@ -72,7 +72,7 @@ module.exports = class Music {
   }
   // pause current song
   pause(message) {
-    if (this.nowPlaying && !this.paused) {
+    if (this.nowPlaying.speaking && !this.paused) {
       this.paused = true;
       this.nowPlaying.pause();
       utility.sendChannelMessageTemp(message, "Track has been paused", 6000);
